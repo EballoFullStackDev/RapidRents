@@ -1,0 +1,196 @@
+﻿@model rapidRents.Web.Models.ViewModels.ItemViewModel<int?>
+@{
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+
+<div class="col-md-6 row panel-body panel commentClass radius-all-10">
+    <h3 class="title-hero bg-primary col-md-14  radius-top-all-10">
+        Comment @Model.Item
+    </h3>
+    <form class="form-horizontal bordered-row" id="formComment">
+        <div class="row">
+
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label class="col-md-1 control-label">Type_Id:</label>
+                    <div class="col-md-12">
+                        <select id="typeId" placeholder="Type ID" name="typeId" class="form-control">
+                            <option value="">Select</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-1 control-label">Title:</label>
+                    <div class="col-md-12">
+                        <input type="text" id="title" placeholder="Please Enter your Title" class="form-control" name="title" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-1 control-label">Body:</label>
+                    <div class="col-md-12">
+                        <textarea type="text" id="body" name="body" placeholder="Please enter your Comment Body" class="form-control"></textarea>
+                    </div>
+                </div>
+                <input type="text" id="idField" class="hidden" name="id" />
+                <div class="col-md-1">
+                    <input type="button" value="Submit" class="btn btn-lg btn-primary" id="submitButton" name="submitButton" />
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+
+@section scripts{
+    <script src="~/Scripts/jquery.validate.js"></script>
+    <script src="~/Scripts/rapidRents.Services.Comment.js"></script>
+    <script src="~/assets/admin/widgets/parsley/parsley.js"></script>
+    <script>
+
+        rapidRents.page.commentsId = '@Model.Item';
+
+    </script>
+
+    <script type="text/javascript">
+
+        rapidRents.page.startUp = function () {
+
+            rapidRents.page.initializeValidation();
+            rapidRents.page.getById();
+
+
+            $("#submitButton").on("click", rapidRents.page.handlers.insertEditUpdateComment);
+
+        }
+
+        rapidRents.page.initializeValidation = function () {
+
+            jQuery.validator.setDefaults({
+                debug: true
+            });
+
+
+            $("#formComment").validate({
+                rules: {
+
+                    "typeId": {
+                        required: true
+                    },
+
+                    "title": {
+                        required: true,
+                        minlength: 3,
+                        maxlength: 30
+                    },
+
+                    "body": {
+                        required: true,
+                        minlength: 10,
+                        maxlength: 1000
+
+                    },
+                },
+
+                messages: {
+
+                    "typeId": {
+                        required: "Please select a type ID"
+                    },
+
+                    "title": {
+                        required: "Comment Title is Required.",
+                        minlength: "Your  is must be at least 3 characters",
+                        maxlength: "Your Title must be less than 30 Characters."
+                    },
+
+                    "body": {
+                        required: "Comment Body is Required.",
+                        minlength: "Your  is must be at least 10 characters",
+                        maxlength: "Your Comment must be less than 1000 Characters."
+                    },
+                }
+
+            });
+        }
+
+        rapidRents.page.getById = function () {
+            if (rapidRents.page.commentsId) {
+
+                rapidRents.services.comment.getById(rapidRents.page.commentsId, rapidRents.page.AjaxGetByIdSuccess, rapidRents.page.AjaxGetByIdError);
+            }
+        }
+
+        rapidRents.page.handlers.insertEditUpdateComment = function () {
+
+
+            if ($("#formComment").valid()) {
+                var commentData = $("#formComment").serialize();
+
+                if (!rapidRents.page.commentsId) {                  
+                    rapidRents.services.comment.add(commentData, rapidRents.page.AjaxInsertSuccess, rapidRents.page.AjaxInsertError)
+                }
+                else {  
+                    rapidRents.services.comment.update(rapidRents.page.commentsId, commentData, rapidRents.page.AjaxUpdateSuccess, rapidRents.page.AjaxUpdateError);
+
+                }
+            }
+        }
+
+
+        rapidRents.page.populateForm = function (dataPopulation) {
+            $("#typeId").val(dataPopulation.typeId);
+            $("#title").val(dataPopulation.title);
+            $('#body').val(dataPopulation.body);
+            $("#idField").val(rapidRents.page.commentsId);
+
+            $("#submitButton").attr('value', 'Edit Form');
+        }     
+
+
+        rapidRents.page.AjaxInsertSuccess = function (data, status, xhr) {
+            rapidRents.page.commentsId = (data.item);
+            $("#idField").val(rapidRents.page.commentsId);
+
+            $("#submitButton").attr('value', 'Update Form');
+        } 
+
+        rapidRents.page.AjaxInsertError = function (jqXHR, textStatus, errorThrown) {
+            console.log("The comment was not added correctly")            
+        }  
+
+
+        rapidRents.page.AjaxUpdateSuccess = function (data, status, xhr) {
+            console.log('The update was a success');
+        } 
+
+        rapidRents.page.AjaxUpdateError = function (jqXHR, textStatus, errorThrown) {
+            console.log('The update was a error');
+        } 
+
+
+
+        rapidRents.page.AjaxGetByIdSuccess = function (data, status, xhr) {
+            var dataItem = data.item;
+
+            if (dataItem) {
+                rapidRents.page.populateForm(dataItem);
+            } else {
+                console.log("User did not enter an existing ID.")
+            }
+        } 
+
+        rapidRents.page.AjaxGetByIdError = function (jqXHR, textStatus, errorThrown) {
+            console.log('The getById was a error');
+        } 
+
+
+
+    </script>
+}
+
